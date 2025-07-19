@@ -1,0 +1,29 @@
+name: 'planetkart'
+version: '1.0.0'
+profile: 'planetkart'
+
+model-paths: ["models"]
+analysis-paths: ["analyses"]
+test-paths: ["tests"]
+seed-paths: ["seeds"]
+macro-paths: ["macros"]
+snapshot-paths: ["snapshots"]
+
+clean-targets:
+  - "target"
+  - "dbt_packages"
+
+models:
+  planetkart:
+    +database: PLANETKART_DBT  # Global database setting
+    
+    staging:
+      +materialized: view
+      +schema: PLANETKART_STAGE
+      +persist_docs:
+        relation: true
+        columns: true
+    
+    finalmodel:
+      +materialized: table
+      +schema: PLANETKART_ANALYTICS
