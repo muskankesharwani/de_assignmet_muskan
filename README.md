@@ -6,29 +6,34 @@ This dbt project implements a data warehouse solution for PlanetKart, an interpl
 
 We’ve built a robust data pipeline using Airbyte, Snowflake, and dbt, applying key data warehousing concepts:
 
-- **Star Schema**: Fact (`fact_orders`) and Dimension tables (`dim_customers`, `dim_products`, `dim_regions`)
-- **Surrogate Keys**: Generated using `dbt_utils.generate_surrogate_key`
-- **Slowly Changing Dimensions**: Implemented Type 2 SCD on customers table using dbt snapshots.
+- **Airbyte** used to ingest raw data into Snowflake
+- **Star Schema** implemented with fact and dimension models
+- **Surrogate Keys** generated using `dbt_utils.generate_surrogate_key`
+- **Type 2 SCD** applied to customer dimension via `dbt snapshots`
+- **Freshness Testing** applied on source table using `dbt source freshness`
+- **DRY Logic** via custom macro `format_full_name`
+- **All models built and materialized using Snowflake & dbt Core**
+
 
 ## Project Structure
 
 ```bash
 models/
-├── staging
+├── staging/
 │   ├── stg_customers.sql
 │   ├── stg_orders.sql
-│   ├── stg_order_items.sql
-│   ├── stg_products.sql
-│   ├── stg_regions.sql
+│   ├── ...
 │   └── schema.yml
-└── finalmodel
-    ├── dim_customers.sql
-    ├── dim_products.sql
-    ├── dim_regions.sql
-    └── fact_orders.sql
-
+├── finalmodel/
+│   ├── dim_customers.sql
+│   ├── dim_products.sql
+│   ├── dim_regions.sql
+│   ├── fact_orders.sql
+│   └── dim_demo_dry_customers.sql
 snapshots/
-└── snapshot_customers.sql
+├── snapshot_customers.sql
+macros/
+├── generate_key.sql
 ```
 
 ##  Setup and Running Instructions
@@ -51,8 +56,17 @@ dbt run
 dbt test
 ```
 
-### Step 4: Generate and view documentation
+### Step 4. Run snapshot
+```bash
+dbt snapshot
+```
 
+### Step 5. Run freshness test
+```bash
+dbt source freshness
+```
+
+### Step 6. View documentation
 ```bash
 dbt docs generate
 dbt docs serve
@@ -71,39 +85,44 @@ Navigate to the lineage graph to see the visual representation clearly outlining
 ##  Assumptions Made:
 
 - Orders represent a complete transaction, associated with exactly one customer.
-- Products and regions are static dimensions with no history tracking required.
+- Products and regions are static dimensions with no history tracking required (no SDC applied).
 - Customer data frequently changes, hence Type 2 SCD applied using snapshots.
+- Freshness interval configured to simulate stale/pass scenarios
 - The primary grain of the fact table is at the order level (one row per order).
 
-## Screenshots Included in Submission (doc shared):
 
-- Airbyte pipeline configuration
-- Snowflake data validation (raw and final tables)
-- dbt snapshot (Type 2 SCD evidence)
-- dbt lineage graph illustrating star schema
 
-##  Enhancements (for future):
+## Features Implemented
 
-- Additional freshness and anomaly tests (dbt-utils)
-- Macros to streamline repeated logic
-- Dashboard visualization layer using tools like Power BI, Looker Studio, or Metabase
+### Star Schema
+- Fact table: `fact_orders`
+- Dimension tables: `dim_customers`, `dim_products`, `dim_regions`
+
+###  Type 2 SCD
+- `snapshot_customers.sql` tracks historical changes in customer records
+
+###  Freshness Check
+- Applied to Airbyte-loaded view `vw_orders`
+- Uses `order_date_cast` as the loaded_at field
+
+### DRY Logic (Custom Macro)
+- `format_full_name(first_name, last_name)` used in `dim_demo_dry_customers`
 
 ---
 
-## Technologies Used
+## Tools and Technologies Used
 
 - **Airbyte**
 - **Snowflake**
 - **dbt Core**
 - **dbt_utils**
 
-##  Resources
+##  Refrences
 
 - [dbt Documentation](https://docs.getdbt.com/)
 - [dbt_utils Package](https://github.com/dbt-labs/dbt-utils)
 - [Snowflake Documentation](https://docs.snowflake.com/)
 - [Airbyte Documentation](https://docs.airbyte.com/)
-
 
 ### Other Learning Resources:
 - Learn more about dbt [in the docs](https://docs.getdbt.com/docs/introduction)
