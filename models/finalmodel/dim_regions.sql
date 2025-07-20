@@ -5,8 +5,9 @@
 ) }}
 
 SELECT
-    sr.region_id AS region_key,
-    sr.zone AS zone,
-    sr.planet AS planet,
+    {{ dbt_utils.generate_surrogate_key(['sr.region_id']) }} AS region_sk,
+    sr.region_id,
+    sr.zone,
+    sr.planet,
     CURRENT_TIMESTAMP AS record_loaded_at
 FROM {{ ref('stg_regions') }} sr

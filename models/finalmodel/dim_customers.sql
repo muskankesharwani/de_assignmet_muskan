@@ -16,10 +16,15 @@ SELECT
     customers.customer_id,
     customers.first_name,
     customers.last_name,
+    {{ format_full_name('customers.first_name', 'customers.last_name') }} AS full_name,
     customers.email,
     customers.signup_date,
     customers.region_id,
+    customers.signup_month,
+    customers.days_since_signup,
+    customers.is_valid_email,
     regions.planet,
-    regions.zone
+    regions.zone,
+    CURRENT_TIMESTAMP AS record_loaded_at
 FROM customers
 LEFT JOIN regions ON customers.region_id = regions.region_id

@@ -27,3 +27,8 @@ models:
     finalmodel:
       +materialized: table
       +schema: PLANETKART_ANALYTICS
+
+    analyses:
+      +materialized: view
+      +schema: PLANETKART_ANALYSES_DB
+      

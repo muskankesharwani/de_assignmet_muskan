@@ -12,14 +12,14 @@ WITH params AS (
 
 dates AS (
     SELECT
-        DATEADD(DAY, ROW_NUMBER() OVER () - 1, (SELECT start_date FROM params)) AS date_day
-    FROM TABLE(GENERATOR(ROWCOUNT => 1 + DATEDIFF(DAY, (SELECT start_date FROM params), (SELECT end_date FROM params))))
+        DATEADD(DAY, SEQ4(), (SELECT start_date FROM params)) AS date_day
+    FROM TABLE(GENERATOR(ROWCOUNT => 7500))
+    WHERE DATEADD(DAY, SEQ4(), (SELECT start_date FROM params)) <= (SELECT end_date FROM params)
 ),
 
 holidays AS (
     SELECT TO_DATE(column1) AS holiday_date, column2 AS holiday_name
     FROM VALUES
-        -- Add or update your holiday list below:
         ('2010-01-01', 'New Year''s Day'),
         ('2010-01-26', 'Republic Day'),
         ('2010-08-15', 'Independence Day'),
@@ -34,10 +34,19 @@ SELECT
     d.date_day,
     EXTRACT(year FROM d.date_day)            AS year,
     EXTRACT(month FROM d.date_day)           AS month,
-    TO_CHAR(d.date_day, 'Month')             AS month_name,
+    TRIM(TO_CHAR(d.date_day, 'MON'))         AS month_name,
     EXTRACT(day FROM d.date_day)             AS day,
     EXTRACT(quarter FROM d.date_day)         AS quarter,
-    TO_CHAR(d.date_day, 'Day')               AS day_name,
+    -- Add quarter label
+    CASE EXTRACT(quarter FROM d.date_day)
+        WHEN 1 THEN 'Q1 (Jan–Mar)'
+        WHEN 2 THEN 'Q2 (Apr–Jun)'
+        WHEN 3 THEN 'Q3 (Jul–Sep)'
+        WHEN 4 THEN 'Q4 (Oct–Dec)'
+    END AS quarter_label,
+    -- Also, just Q1, Q2, etc. as short name:
+    CONCAT('Q', EXTRACT(quarter FROM d.date_day)) AS quarter_name,
+    TRIM(TO_CHAR(d.date_day, 'DY')) AS day_name,
     EXTRACT(dayofweek FROM d.date_day)       AS day_of_week,
     CASE WHEN EXTRACT(dayofweek FROM d.date_day) IN (0,6) THEN 1 ELSE 0 END AS is_weekend,
     WEEK(d.date_day)                         AS week_of_year,

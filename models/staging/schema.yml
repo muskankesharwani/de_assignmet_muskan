@@ -6,10 +6,13 @@ sources:
     schema: PLANETKART_RAW
     tables:
       - name: customers
-      - name: vw_orders
-        loaded_at_field: order_date_cast
+      - name: orders
+        loaded_at_field: order_date
         config:
           freshness:
+            warn_after:
+              count: 1
+              period: day
             error_after:
               count: 2
               period: day
@@ -17,32 +20,142 @@ sources:
       - name: products
       - name: regions
 
-
 models:
   - name: stg_customers
+    description: "Staged and cleansed customer data for PlanetKart."
     columns:
       - name: customer_id
+        description: "Unique identifier for the customer."
         tests:
           - not_null
           - unique
-      - name: region_id
+      - name: first_name
+        description: "Customer first name."
+      - name: last_name
+        description: "Customer last name."
+      - name: email
+        description: "Customer email address."
         tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "{{ column_name }} LIKE '%@%.%'"
+      - name: region_id
+        description: "Foreign key to region."
+        tests:
+          - not_null
           - accepted_values:
               values: ['R001', 'R002', 'R003', 'R004']
+      - name: signup_date
+        description: "Customer registration date."
+        tests:
+          - not_null
+      - name: cohort_month
+        description: "First signup month, for cohort analysis."
+      - name: days_since_signup
+        description: "Number of days since the customer signed up."
+      - name: is_valid_email
+        description: "Is the email address structurally valid?"
 
   - name: stg_orders
+    description: "Staged and cleansed order headers."
     columns:
       - name: order_id
+        description: "Unique order ID."
         tests:
           - not_null
           - unique
       - name: customer_id
+        description: "Foreign key to customer."
         tests:
           - not_null
       - name: order_date
+        description: "Date when the order was placed."
         tests:
           - not_null
       - name: status
+        description: "Order status (normalized)."
         tests:
+          - not_null
           - accepted_values:
-              values: ['Completed', 'Pending', 'Shipped', 'Cancelled']
+              values: ['completed', 'pending', 'shipped', 'cancelled']
+      - name: order_year
+        description: "Year extracted from order date."
+      - name: order_month
+        description: "Month extracted from order date."
+      - name: is_valid_status
+        description: "Is the order status in the accepted set?"
+
+  - name: stg_order_items
+    description: "Staged and cleansed order line items."
+    columns:
+      - name: order_id
+        description: "Order header foreign key."
+        tests:
+          - not_null
+      - name: product_id
+        description: "Product foreign key."
+        tests:
+          - not_null
+      - name: quantity
+        description: "Number of units for this line item."
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "{{ column_name }} > 0"
+      - name: unit_price
+        description: "Unit price for this product at time of order."
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "{{ column_name }} >= 0"
+      - name: total_line_amount
+        description: "Total price for this line (quantity * unit_price)."
+      - name: is_valid_line
+        description: "Data quality flag: is quantity and price valid?"
+    tests:
+      - dbt_utils.unique_combination_of_columns:
+          combination_of_columns:
+            - order_id
+            - product_id
+
+  - name: stg_products
+    description: "Staged and cleansed product catalog."
+    columns:
+      - name: product_id
+        description: "Unique identifier for product."
+        tests:
+          - not_null
+          - unique
+      - name: product_name
+        description: "Product name."
+      - name: sku
+        description: "Stock keeping unit."
+      - name: category
+        description: "Product category."
+        tests:
+          - not_null
+      - name: cost
+        description: "Product cost (float)."
+        tests:
+          - not_null
+          - dbt_utils.expression_is_true:
+              expression: "{{ column_name }} >= 0"
+      - name: product_name_sku
+        description: "Product name with SKU for easy reference."
+
+  - name: stg_regions
+    description: "Staged and cleansed region data."
+    columns:
+      - name: region_id
+        description: "Region code (PK)."
+        tests:
+          - not_null
+          - unique
+      - name: planet
+        description: "Planet name (uppercased)."
+        tests:
+          - not_null
+      - name: zone
+        description: "Zone on planet."
+        tests:
+          - not_null

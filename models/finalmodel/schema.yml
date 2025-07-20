@@ -1,0 +1,125 @@
+version: 2
+
+models:
+  - name: dim_customers
+    description: "Dimension table: Customer master, enriched with region, cohort, and analytics fields."
+    columns:
+      - name: customer_sk
+        description: "Surrogate key for customer dimension (unique per customer)."
+        tests:
+          - not_null
+          - unique
+      - name: customer_id
+        description: "Source system customer ID."
+        tests:
+          - not_null
+          - unique
+      - name: first_name
+        description: "Customer first name."
+      - name: last_name
+        description: "Customer last name."
+      - name: email
+        description: "Customer email address."
+      - name: signup_date
+        description: "Customer signup date."
+      - name: region_id
+        description: "FK to region dimension."
+      - name: cohort_month
+        description: "Signup cohort month."
+      - name: days_since_signup
+        description: "Days since customer joined."
+      - name: is_valid_email
+        description: "Is the email syntactically valid."
+      - name: planet
+        description: "Customer's planet (from region)."
+      - name: zone
+        description: "Customer's delivery zone."
+      - name: record_loaded_at
+        description: "ETL load timestamp."
+
+  - name: dim_products
+    description: "Dimension table: Product master, with cleaned names and SKUs."
+    columns:
+      - name: product_sk
+        description: "Surrogate key for product dimension."
+        tests:
+          - not_null
+          - unique
+      - name: product_id
+        description: "Source system product ID."
+        tests:
+          - not_null
+          - unique
+      - name: product_name
+        description: "Product display name."
+      - name: category
+        description: "Product category."
+      - name: sku
+        description: "Stock keeping unit."
+      - name: cost
+        description: "Product cost."
+      - name: product_name_sku
+        description: "Product name + SKU for dashboards/search."
+      - name: record_loaded_at
+        description: "ETL load timestamp."
+
+  - name: dim_regions
+    description: "Dimension table: Region and planet mapping."
+    columns:
+      - name: region_sk
+        description: "Surrogate key for region."
+        tests:
+          - not_null
+          - unique
+      - name: region_id
+        description: "Region code from source."
+        tests:
+          - not_null
+          - unique
+      - name: zone
+        description: "Zone within planet."
+      - name: planet
+        description: "Planet name."
+      - name: record_loaded_at
+        description: "ETL load timestamp."
+
+  - name: fact_orders
+    description: "Fact table: Orders with links to customer and region, with revenue and product counts."
+    columns:
+      - name: order_fact_sk
+        description: "Surrogate key for the order fact row."
+        tests:
+          - not_null
+          - unique
+      - name: order_id
+        description: "Order ID from source."
+        tests:
+          - not_null
+          - unique
+      - name: customer_sk
+        description: "FK to customer dimension."
+        tests:
+          - not_null
+      - name: order_date
+        description: "Order date."
+        tests:
+          - not_null
+      - name: status
+        description: "Order status (normalized)."
+        tests:
+          - accepted_values:
+              values: ['completed', 'pending', 'shipped', 'cancelled']
+      - name: order_year
+        description: "Year part of order date."
+      - name: order_month
+        description: "Month part of order date."
+      - name: region_sk
+        description: "FK to region dimension."
+      - name: total_products
+        description: "Total products on this order."
+      - name: total_quantity
+        description: "Total quantity ordered."
+      - name: total_revenue
+        description: "Total revenue for order (SUM of quantity * unit_price)."
+      - name: record_loaded_at
+        description: "ETL load timestamp."
