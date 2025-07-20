@@ -13,6 +13,8 @@ We’ve built a robust data pipeline using Airbyte, Snowflake, and dbt, applying
 - **Freshness Testing** applied on source table using `dbt source freshness`
 - **DRY Logic** via custom macro `format_full_name`
 - **All models built and materialized using Snowflake & dbt Core**
+- **Looker Studio Dashboard** powered by `region_order_summary` model
+
 
 
 ## Project Structure
@@ -29,7 +31,8 @@ models/
 │   ├── dim_products.sql
 │   ├── dim_regions.sql
 │   ├── fact_orders.sql
-│   └── dim_demo_dry_customers.sql
+│   ├── dim_demo_dry_customers.sql
+│   └── region_order_summary.sql
 snapshots/
 ├── snapshot_customers.sql
 macros/
@@ -82,15 +85,7 @@ dbt docs serve
 
 Navigate to the lineage graph to see the visual representation clearly outlining the relationships between fact and dimension tables.
 
-##  Assumptions Made:
-
-- Orders represent a complete transaction, associated with exactly one customer.
-- Products and regions are static dimensions with no history tracking required (no SDC applied).
-- Customer data frequently changes, hence Type 2 SCD applied using snapshots.
-- Freshness interval configured to simulate stale/pass scenarios
-- The primary grain of the fact table is at the order level (one row per order).
-
-
+---
 
 ## Features Implemented
 
@@ -109,6 +104,41 @@ Navigate to the lineage graph to see the visual representation clearly outlining
 - `format_full_name(first_name, last_name)` used in `dim_demo_dry_customers`
 
 ---
+## Aggregated Insights Model
+
+###  `region_order_summary.sql`
+
+This model calculates:
+- Total orders and revenue by `planet` and `zone`
+- Used in dashboard for geographic-level KPIs
+
+---
+
+## Dashboard Layer (Looker Studio)
+
+A dashboard was built using **Google Looker Studio** on top of the `region_order_summary` model.
+
+### Includes:
+-  Bar Chart: Orders by Planet
+-  Pie Chart: Revenue by Zone
+- Table: Orders + Revenue by Planet & Zone
+-  Filter controls for zone selection
+
+### Data Source:
+```sql
+PLANETKART_ANALYTICS.REGION_ORDER_SUMMARY
+```
+---
+##  Assumptions Made:
+
+- Orders represent a complete transaction, associated with exactly one customer.
+- Products and regions are static dimensions with no history tracking required (no SDC applied).
+- Customer data frequently changes, hence Type 2 SCD applied using snapshots.
+- The primary grain of the fact table is at the order level (one row per order).
+- Freshness interval configured to simulate stale/pass scenarios.
+- Revenue calculated as quantity × price (from order items).
+
+---
 
 ## Tools and Technologies Used
 
@@ -124,7 +154,7 @@ Navigate to the lineage graph to see the visual representation clearly outlining
 - [Snowflake Documentation](https://docs.snowflake.com/)
 - [Airbyte Documentation](https://docs.airbyte.com/)
 
-### Other Learning Resources:
+## Other Learning Resources:
 - Learn more about dbt [in the docs](https://docs.getdbt.com/docs/introduction)
 - Check out [Discourse](https://discourse.getdbt.com/) for commonly asked questions and answers
 - Join the [chat](https://community.getdbt.com/) on Slack for live discussions and support
