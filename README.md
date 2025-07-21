@@ -220,7 +220,14 @@ Key Screenshots
 ![Snowflake data preview](screenshots/airbyte_data_snowflake.png)
 
 ### 3. dbt Schema
-<img src="screenshots/dbt_dag.png" alt="dbt DAG" width="400"/>
+
+<img src="screenshots/dbt_dag.png" alt="dbt DAG" width="550"/>
+
+### 4. Snowflake Schema After dbt Run
+
+Below is a screenshot showing the loaded schemas and tables in Snowflake after running all dbt models.  
+
+![Snowflake DB with dbt Models and Data Loaded](screenshots/snowflake_load_dbt.png)
 
 ---
 
