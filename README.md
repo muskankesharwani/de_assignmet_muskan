@@ -220,7 +220,7 @@ Key Screenshots
 ![Snowflake data preview](screenshots/airbyte_data_snowflake.png)
 
 ### 3. dbt Schema
-![dbt DAG](screenshots/dbt_dag.png)
+<img src="screenshots/dbt_dag.png" alt="dbt DAG" width="400"/>
 
 ---
 
@@ -242,11 +242,3 @@ Key Screenshots
 - [Snowflake Documentation](https://docs.snowflake.com/)
 - [Airbyte Documentation](https://docs.airbyte.com/)
 - [Looker Studio Guide](https://support.google.com/looker-studio/)
-
-## Other Learning Resources:
-- Learn more about dbt [in the docs](https://docs.getdbt.com/docs/introduction)
-- Check out [Discourse](https://discourse.getdbt.com/) for commonly asked questions and answers
-- Join the [chat](https://community.getdbt.com/) on Slack for live discussions and support
-- Find [dbt events](https://events.getdbt.com) near you
-- Check out [the blog](https://blog.getdbt.com/) for the latest news on dbt's development and best practices
-
