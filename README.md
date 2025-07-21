@@ -231,7 +231,7 @@ Below is a screenshot showing the loaded schemas and tables in Snowflake after r
 
 ---
 
-## Maintainer
+## 🛠️ Maintainer  
 
 **Muskan Kesharwani**  
 *Data Engineer & Analytics Specialist*
@@ -242,7 +242,7 @@ GitHub: [github.com/muskankesharwani](https://github.com/muskankesharwani)
 
 ---
 
-##  Refrences
+##  References
 
 - [dbt Documentation](https://docs.getdbt.com/)
 - [dbt_utils Package](https://github.com/dbt-labs/dbt-utils)
