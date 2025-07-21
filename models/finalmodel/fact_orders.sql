@@ -17,7 +17,7 @@ dim_regions AS (
     SELECT region_sk, region_id FROM {{ ref('dim_regions') }}
 ),
 dim_products AS (
-    SELECT product_sk, product_id, category FROM {{ ref('dim_products') }}
+    SELECT product_sk, product_id, category,cost FROM {{ ref('dim_products') }}
 ),
 order_item_ranked AS (
     SELECT
@@ -37,8 +37,7 @@ order_main_category AS (
         category AS main_category
     FROM order_item_ranked
     WHERE category_rank = 1
-)
-,
+),
 dim_dates AS (
     SELECT * FROM {{ ref('dim_date_analysis') }}
 )
@@ -54,7 +53,24 @@ SELECT
     dr.region_sk,
     COUNT(DISTINCT oi.product_id) AS total_products,
     SUM(oi.quantity) AS total_quantity,
-    SUM(oi.quantity * oi.unit_price) AS total_revenue,
+    -- Only count revenue for completed orders
+    SUM(
+      CASE 
+        WHEN o.status = 'completed'
+          THEN oi.quantity * oi.unit_price
+        ELSE 0
+      END
+    ) AS total_revenue,
+
+    -- profit for completed orders
+    SUM(
+  CASE
+    WHEN o.status = 'completed'
+      THEN (oi.unit_price - dp.cost) * oi.quantity
+    ELSE 0
+  END
+) AS total_profit,
+
 
     -- Advanced date analytics from date dimension
     dd.is_weekend,
@@ -78,6 +94,7 @@ LEFT JOIN dim_customers dc ON o.customer_id = dc.customer_id
 LEFT JOIN dim_regions dr ON dc.region_id = dr.region_id
 LEFT JOIN order_main_category ON o.order_id = order_main_category.order_id
 LEFT JOIN dim_dates dd ON o.order_date = dd.date_day
+LEFT JOIN dim_products dp ON oi.product_id = dp.product_id
 GROUP BY
     o.order_id, dc.customer_sk, o.order_date, o.status, o.order_year, o.order_month,
     dr.region_sk, dd.is_weekend, dd.day_name, dd.is_holiday, dd.holiday_name, dd.month_name,

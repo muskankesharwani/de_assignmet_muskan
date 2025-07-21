@@ -6,128 +6,181 @@ This dbt project implements a data warehouse solution for PlanetKart, an interpl
 
 We’ve built a robust data pipeline using Airbyte, Snowflake, and dbt, applying key data warehousing concepts:
 
-- **Airbyte** used to ingest raw data into Snowflake
-- **Star Schema** implemented with fact and dimension models
+- **Modern ELT Pipeline**: Airbyte → Snowflake (PLANETKART_RAW) → dbt transformations
+- **Modern dbt Project**: Staging, dimension, fact, and analytics (analyses) models in star schema
+- **Advanced Fact Table**: Business logic for revenue/profit
 - **Surrogate Keys** generated using `dbt_utils.generate_surrogate_key`
 - **Type 2 SCD** applied to customer dimension via `dbt snapshots`
-- **Freshness Testing** applied on source table using `dbt source freshness`
-- **DRY Logic** via custom macro `format_full_name`
-- **All models built and materialized using Snowflake & dbt Core**
-- **Looker Studio Dashboard** powered by `region_order_summary` model
+- **Robust Testing**: Constraints, freshness, and macro-based tests
+- **Looker Studio Dashboard**: Executive, category, and customer views using curated reporting tables
 
+---
 
+## Data Architecture
+
+### Data Flow
+```
+Raw Sources (Airbyte) → Snowflake Raw → Staging Layer → Dimensional Models → Analytics Layer → BI Dashboards
+```
+
+### Layer Breakdown
+
+####  **Staging Layer** (`models/staging/`)
+Clean, standardized data ready for dimensional modeling
+- `stg_customers.sql` - Customer data standardization
+- `stg_orders.sql` - Order transaction cleaning
+- `stg_order_items.sql` - Line item details
+- `stg_products.sql` - Product catalog normalization
+- `stg_regions.sql` - Geographic reference data
+
+####  **Dimensional Layer** (`models/finalmodel/`)
+Star schema optimized for analytics performance
+- `dim_customers.sql` - Customer dimension with business attributes
+- `dim_products.sql` - Product dimension with category hierarchies
+- `dim_regions.sql` - Geographic dimension (planets, zones, regions)
+- `dim_date_analysis.sql` - Date dimension with business calendar
+- `fact_orders.sql` - **Central fact table** with all business metrics
+
+####  **Analytics Layer** (`models/analyses/`)
+Business-ready reporting models materialized as views
+- `orders_and_revenue_by_region_quarter.sql` - Regional performance trends
+- `category_sales_by_region_quarter.sql` - Category performance by geography
+- `avg_order_value_by_category_region.sql` - AOV analysis across dimensions
+- `category_growth_by_region_quarter.sql` - Growth rate calculations
+- `top_5_customers_by_region_category.sql` - Customer ranking and segmentation
+- `total_sales_by_region.sql` - Geographic sales summary
+
+---
 
 ## Project Structure
 
 ```bash
 models/
-├── staging/
-│   ├── stg_customers.sql
-│   ├── stg_orders.sql
-│   ├── ...
-│   └── schema.yml
-├── finalmodel/
-│   ├── dim_customers.sql
-│   ├── dim_products.sql
-│   ├── dim_regions.sql
-│   ├── fact_orders.sql
-│   ├── dim_demo_dry_customers.sql
-│   └── region_order_summary.sql
-snapshots/
-├── snapshot_customers.sql
-macros/
-├── generate_key.sql
+planetkart/
+├── README.md
+├── dbt_project.yml
+├── packages.yml
+├── package-lock.yml
+├── logs/
+│   └── dbt.log
+├── seeds/
+│   └── (optional seed csv files for reference data)
+├── macros/
+│   ├── format_full_name.sql
+│   ├── generate_key.sql
+│   └── generate_schema_name.sql
+├── dbt_packages/
+│   └── dbt_utils/
+│       └── ... (dbt_utils macros & docs)
+├── snapshots/
+│   └── snapshot_customers.sql
+├── models/
+│   ├── staging/
+│   │   ├── stg_customers.sql
+│   │   ├── stg_orders.sql
+│   │   ├── stg_order_items.sql
+│   │   ├── stg_products.sql
+│   │   ├── stg_regions.sql
+│   │   └── schema.yml
+│   ├── finalmodel/
+│   │   ├── dim_customers.sql
+│   │   ├── dim_products.sql
+│   │   ├── dim_regions.sql
+│   │   ├── dim_date_analysis.sql
+│   │   ├── fact_orders.sql
+│   │   └── region_order_summary.sql
+│   ├── analyses/
+│   │   ├── orders_and_revenue_by_region_quarter.sql
+│   │   ├── avg_order_value_by_category_region.sql
+│   │   ├── category_sales_by_region_quarter.sql
+│   │   ├── category_growth_by_region_quarter.sql
+│   │   ├── top_5_customers_by_region_category.sql
+│   │   └── total_sales_by_region.sql
+│   └── tests/
+│       └── (any custom data or schema tests)
+├── target/
+│   └── (dbt compiled and run artifacts)
+
+
 ```
 
 ##  Setup and Running Instructions
 
-### Step 1: Install Dependencies
+### Prerequisites
+- Snowflake account with appropriate permissions
+- dbt Core installed (`pip install dbt-snowflake`)
+- Airbyte instance configured for data ingestion
 
-```bash
-dbt deps
-```
+### Quick Setup
 
-### Step 2: Run the models
+1. **Clone and Setup**
+   ```bash
+   git clone <repository-url>
+   cd planetkart
+   dbt deps  # Install dbt_utils and other packages
+   ```
 
-```bash
-dbt run
-```
+2. **Configure Connection**
+   ```bash
+   # Update profiles.yml with your Snowflake credentials
+   dbt debug  # Test connection
+   ```
 
-### Step 3: Run tests
+3. **Run Full Pipeline**
+   ```bash
+   dbt run              # Build all models
+   dbt test             # Run data quality tests
+   dbt snapshot         # Capture SCD2 changes
+   dbt source freshness # Check data freshness
+   ```
 
-```bash
-dbt test
-```
-
-### Step 4. Run snapshot
-```bash
-dbt snapshot
-```
-
-### Step 5. Run freshness test
-```bash
-dbt source freshness
-```
-
-### Step 6. View documentation
-```bash
-dbt docs generate
-dbt docs serve
-```
-
-##  Schema & Lineage Diagram
-
-To view the star schema and lineage, run:
-
-```bash
-dbt docs serve
-```
-
-Navigate to the lineage graph to see the visual representation clearly outlining the relationships between fact and dimension tables.
+4. **Generate Documentation**
+   ```bash
+   dbt docs generate
+   dbt docs serve      # View at http://localhost:8080
+   ```
 
 ---
 
-## Features Implemented
+##  Business Logic & Features
 
-### Star Schema
-- Fact table: `fact_orders`
-- Dimension tables: `dim_customers`, `dim_products`, `dim_regions`
+###  **Smart Revenue Calculation**
+The `fact_orders` table implements sophisticated business logic:
+-  **Completed Orders**: Full revenue and profit attribution
+-  **Pending Orders**: $0 revenue until completion
+-  **Cancelled Orders**: $0 revenue, captured for analysis
+-  **Profit Margins**: Calculated using product cost and sale price
 
-###  Type 2 SCD
-- `snapshot_customers.sql` tracks historical changes in customer records
+###  **Historical Data Tracking**
+- **Customer SCD2**: Complete audit trail of customer changes
 
-###  Freshness Check
-- Applied to Airbyte-loaded view `vw_orders`
-- Uses `order_date_cast` as the loaded_at field
-
-### DRY Logic (Custom Macro)
-- `format_full_name(first_name, last_name)` used in `dim_demo_dry_customers`
-
----
-## Aggregated Insights Model
-
-###  `region_order_summary.sql`
-
-This model calculates:
-- Total orders and revenue by `planet` and `zone`
-- Used in dashboard for geographic-level KPIs
+###  **Multi-Dimensional Analysis**
+- **Geographic Intelligence**: Planet → Zone → Region hierarchy
+- **Temporal Insights**: Date dimension with business calendar
+- **Product Categorization**: Multi-level category analysis
+- **Customer Segmentation**: VIP status and behavioral groupings
 
 ---
 
-## Dashboard Layer (Looker Studio)
+##  Analytics & Dashboards
 
-A dashboard was built using **Google Looker Studio** on top of the `region_order_summary` model.
+### Executive SUMMARY 
+- Total Revenue & Profit
+- Revenue by Planet
+- Regional (zone) Performance
+- Order distribution
 
-### Includes:
--  Bar Chart: Orders by Planet
--  Pie Chart: Revenue by Zone
-- Table: Orders + Revenue by Planet & Zone
--  Filter controls for zone selection
+### Category Performance Analysis
+- Top-performing categories by region
+- Revenue vs. Volume scatter analysis
+- Catgory performance ranking
+- AOV insights by category
 
-### Data Source:
-```sql
-PLANETKART_ANALYTICS.REGION_ORDER_SUMMARY
-```
+### VIP CUSTOMER INTELLIGENCE
+-  VIP customer identification
+- Geographic distribution
+- Spending pattern analysis
+
 ---
 ##  Assumptions Made:
 
@@ -142,10 +195,26 @@ PLANETKART_ANALYTICS.REGION_ORDER_SUMMARY
 
 ## Tools and Technologies Used
 
-- **Airbyte**
-- **Snowflake**
-- **dbt Core**
-- **dbt_utils**
+| Component | Technology | Purpose |
+|-----------|------------|---------|
+| **Data Ingestion** | Airbyte | ELT pipeline from source systems |
+| **Data Warehouse** | Snowflake | Cloud data platform |
+| **Transformation** | dbt Core | SQL-based transformations |
+| **Visualization** | Looker Studio | Business intelligence dashboards |
+| **Version Control** | Git | Code versioning and collaboration |
+
+---
+
+## Maintainer
+
+**Muskan Kesharwani**  
+*Data Engineer & Analytics Specialist*
+
+[muskankesharwani987@gmail.com](mailto:muskankesharwani987@gmail.com)  
+[github.com/muskankesharwani](https://github.com/muskankesharwani)  
+
+
+---
 
 ##  Refrences
 
@@ -153,6 +222,7 @@ PLANETKART_ANALYTICS.REGION_ORDER_SUMMARY
 - [dbt_utils Package](https://github.com/dbt-labs/dbt-utils)
 - [Snowflake Documentation](https://docs.snowflake.com/)
 - [Airbyte Documentation](https://docs.airbyte.com/)
+- [Looker Studio Guide](https://support.google.com/looker-studio/)
 
 ## Other Learning Resources:
 - Learn more about dbt [in the docs](https://docs.getdbt.com/docs/introduction)
