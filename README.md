@@ -100,6 +100,8 @@ planetkart/
 │       └── (any custom data or schema tests)
 ├── target/
 │   └── (dbt compiled and run artifacts)
+├── screenshots/
+│ 
 
 
 ```
@@ -165,18 +167,21 @@ The `fact_orders` table implements sophisticated business logic:
 ##  Analytics & Dashboards
 
 ### Executive SUMMARY 
+ ![Dashboard](screenshots/dashboard_kpis1.png)
 - Total Revenue & Profit
 - Revenue by Planet
 - Regional (zone) Performance
 - Order distribution
 
 ### Category Performance Analysis
+![Dashboard](screenshots/dashboard_kpis3.png)
 - Top-performing categories by region
 - Revenue vs. Volume scatter analysis
 - Catgory performance ranking
 - AOV insights by category
 
 ### VIP CUSTOMER INTELLIGENCE
+![Dashboard](screenshots/dashboard_kpis2.png)
 -  VIP customer identification
 - Geographic distribution
 - Spending pattern analysis
@@ -202,6 +207,20 @@ The `fact_orders` table implements sophisticated business logic:
 | **Transformation** | dbt Core | SQL-based transformations |
 | **Visualization** | Looker Studio | Business intelligence dashboards |
 | **Version Control** | Git | Code versioning and collaboration |
+
+---
+Key Screenshots
+
+### 1. Hevo/Airbyte Pipeline Setup
+
+![Airbyte pipeline setup](screenshots/airbyte_pipeline.png)
+
+### 2. Data Loaded in Snowflake
+
+![Snowflake data preview](screenshots/airbyte_data_snowflake.png)
+
+### 3. dbt Schema
+![dbt DAG](screenshots/dbt_dag.png)
 
 ---
 
