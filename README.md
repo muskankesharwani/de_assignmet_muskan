@@ -179,22 +179,27 @@ The `fact_orders` table implements sophisticated business logic:
 - **Final models:** Fact/dim tables contain all business rules, join only clean data.
 - **Analyses layer:** All BI dashboards built from lightweight views in `analyses/` for flexibility.
 
-### 4. **Revenue and Profit Calculation**
+### 4. **Custom Schema Macro for Environment-Specific Schema Names**
+- Implemented `generate_schema_name.sql` macro for flexible, profile-driven schema naming.
+- Uses the model’s custom schema if specified; otherwise, uses the target environment’s schema.
+- Simplifies environment management and ensures models deploy to the right schema.
+
+### 5. **Revenue and Profit Calculation**
 - Only orders with `status = 'completed'` are counted in `total_revenue` and `total_profit` (pending/cancelled = 0 revenue).
 - Profit is calculated per order using product cost at time of sale for accuracy.
 
-### 5. **Type 2 SCD for Customer Dimension**
+### 6. **Type 2 SCD for Customer Dimension**
 - Implemented dbt snapshotting on customers to track changes over time (e.g., region changes, updated email).
 - **Rationale:** Enables point-in-time analytics and data audits.
 
-### 6. **Data Quality and Freshness**
+### 7. **Data Quality and Freshness**
 - Automated tests for PK, not_null, accepted_values, and custom business rules.
 - dbt source freshness test monitors ETL lag, with clear thresholds to simulate stale data.
 
-### 7. **Macros and DRY Logic**
+### 8. **Macros and DRY Logic**
 - Used custom Jinja macros (e.g., `format_full_name`) to keep transformations DRY and maintainable.
 
-### 8. **BI Layer (Looker Studio)**
+### 9. **BI Layer (Looker Studio)**
 - All dashboards use the analyses layer, **never raw/fact tables directly**, to avoid exposing business logic to BI users.
 
 
