@@ -161,6 +161,42 @@ The `fact_orders` table implements sophisticated business logic:
 - **Temporal Insights**: Date dimension with business calendar
 - **Product Categorization**: Multi-level category analysis
 - **Customer Segmentation**: VIP status and behavioral groupings
+---
+##  Design Decisions
+
+### 1. **Airbyte as ELT Tool**
+- Used Airbyte (as instructed) to automate ingestion of all source tables into Snowflake’s raw schema.
+- Chose append/overwrite modes based on expected table volatility.
+
+### 2. **Layered Data Modeling (Star Schema)**
+- Modeled all reporting around a **star schema** for performance and ease of BI.
+    - **Fact table:** Fact_orders - Order grain, all revenue/profit logic here.
+    - **Dimensions:** Customers (SCD2), Products, Regions, Date (with holiday logic).
+- **Rationale:** Separates data cleaning (staging) from business logic (dims/facts) and BI logic (analyses).
+
+### 3. **dbt Project Structure**
+- **Staging models:** All raw tables have join-friendly, atomic staging models.
+- **Final models:** Fact/dim tables contain all business rules, join only clean data.
+- **Analyses layer:** All BI dashboards built from lightweight views in `analyses/` for flexibility.
+
+### 4. **Revenue and Profit Calculation**
+- Only orders with `status = 'completed'` are counted in `total_revenue` and `total_profit` (pending/cancelled = 0 revenue).
+- Profit is calculated per order using product cost at time of sale for accuracy.
+
+### 5. **Type 2 SCD for Customer Dimension**
+- Implemented dbt snapshotting on customers to track changes over time (e.g., region changes, updated email).
+- **Rationale:** Enables point-in-time analytics and data audits.
+
+### 6. **Data Quality and Freshness**
+- Automated tests for PK, not_null, accepted_values, and custom business rules.
+- dbt source freshness test monitors ETL lag, with clear thresholds to simulate stale data.
+
+### 7. **Macros and DRY Logic**
+- Used custom Jinja macros (e.g., `format_full_name`) to keep transformations DRY and maintainable.
+
+### 8. **BI Layer (Looker Studio)**
+- All dashboards use the analyses layer, **never raw/fact tables directly**, to avoid exposing business logic to BI users.
+
 
 ---
 
@@ -190,6 +226,7 @@ The `fact_orders` table implements sophisticated business logic:
 ##  Assumptions Made:
 
 - Orders represent a complete transaction, associated with exactly one customer.
+- Staging models are views for dev agility; dims/facts/analyses are tables/views as needed for performance.
 - Products and regions are static dimensions with no history tracking required (no SDC applied).
 - Customer data frequently changes, hence Type 2 SCD applied using snapshots.
 - The primary grain of the fact table is at the order level (one row per order).
