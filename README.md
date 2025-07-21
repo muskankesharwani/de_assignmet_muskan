@@ -236,8 +236,8 @@ Below is a screenshot showing the loaded schemas and tables in Snowflake after r
 **Muskan Kesharwani**  
 *Data Engineer & Analytics Specialist*
 
-[muskankesharwani987@gmail.com](mailto:muskankesharwani987@gmail.com)  
-[github.com/muskankesharwani](https://github.com/muskankesharwani)  
+Email: [muskankesharwani987@gmail.com](mailto:muskankesharwani987@gmail.com)  
+GitHub: [github.com/muskankesharwani](https://github.com/muskankesharwani)  
 
 
 ---
